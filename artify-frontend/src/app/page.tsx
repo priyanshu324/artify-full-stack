@@ -1,21 +1,19 @@
-import Footer from "../components/footer/Footer";
-import BrowseRange from "../components/home/BrowseRange";
-import HeroBanner from "../components/home/HeroBanner";
-import Inspirations from "../components/home/inspiration/Inspirations";
-import Products from "../components/home/products/Products";
-import ShareSetup from "../components/home/ShareSetup";
-import Navbar from "../components/navbar/NavBar";
+import BrowseRange from "@/src/components/home/BrowseRange";
+import HeroBanner from "@/src/components/home/HeroBanner";
+import Inspirations from "@/src/components/home/inspiration/Inspirations";
+import Products from "@/src/components/home/products/Products";
+import ShareSetup from "@/src/components/home/ShareSetup";
 
-export default function Home() {
+
+
+export default function HomePage() {
   return (
     <div>
-      <Navbar />
       <HeroBanner />
       <BrowseRange />
       <Products />
       <Inspirations />
       <ShareSetup />
-      <Footer />
     </div>
   );
 }
