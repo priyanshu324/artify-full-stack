@@ -5,7 +5,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { FiChevronRight } from "react-icons/fi";
 
-const ShopPage: React.FC = () => {
+const ShopBanner: React.FC = () => {
     return (
         <section className="relative w-full h-[316px]">
             {/* Background Image */}
@@ -35,4 +35,4 @@ const ShopPage: React.FC = () => {
     );
 };
 
-export default ShopPage;
+export default ShopBanner;

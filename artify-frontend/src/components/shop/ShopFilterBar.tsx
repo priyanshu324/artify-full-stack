@@ -2,59 +2,126 @@
 
 import { FiFilter } from "react-icons/fi";
 import { BsGrid3X3Gap, BsListUl } from "react-icons/bs";
-import React from "react";
+import React, { useState } from "react";
 
-const ShopFilterBar: React.FC = () => {
+interface FilterProps {
+    onFilterChange: (filters: {
+        layout: "grid" | "list";
+        sort: string;
+        category: string;
+        priceRange: string;
+    }) => void;
+    currentPage: number;
+    productsPerPage: number;
+    totalProducts: number;
+}
+
+const ShopFilterBar: React.FC<FilterProps> = ({
+    onFilterChange,
+    currentPage,
+    productsPerPage,
+    totalProducts,
+}) => {
+    const [layout, setLayout] = useState<"grid" | "list">("grid");
+    const [sort, setSort] = useState("default");
+    const [category, setCategory] = useState("all");
+    const [priceRange, setPriceRange] = useState("all");
+
+    const handleChange = (updates: any) => {
+        const newFilters = { layout, sort, category, priceRange, ...updates };
+        if (updates.layout) setLayout(updates.layout);
+        if (updates.sort) setSort(updates.sort);
+        if (updates.category) setCategory(updates.category);
+        if (updates.priceRange) setPriceRange(updates.priceRange);
+        onFilterChange(newFilters);
+    };
+
+    // 🧮 Pagination Range Calculation
+    const startIndex = (currentPage - 1) * productsPerPage + 1;
+    const endIndex = Math.min(currentPage * productsPerPage, totalProducts);
+
     return (
         <div className="bg-[#F9F1E7] py-4 px-6 flex flex-wrap items-center justify-between text-black">
-            {/* Left Section - Filter & View */}
-            <div className="flex items-center gap-4 flex-wrap">
-                <div className="flex items-center gap-2">
-                    <FiFilter className="text-xl" />
-                    <span className="font-medium text-base">Filter</span>
-                </div>
+          {/* Left Section */}
+          <div className="flex items-center gap-4 flex-wrap">
+              <div className="flex items-center gap-2">
+                  <FiFilter className="text-xl" />
+                  <span className="font-medium text-base">Filter</span>
+              </div>
 
-                {/* View Icons */}
-                <div className="flex items-center gap-3 text-xl">
-                    <BsGrid3X3Gap className="cursor-pointer hover:text-[#B88E2F]" />
-                    <BsListUl className="cursor-pointer hover:text-[#B88E2F]" />
-                </div>
+              <div className="flex items-center gap-3 text-xl">
+                  <BsGrid3X3Gap
+                      className={`cursor-pointer ${layout === "grid" ? "text-[#B88E2F]" : "text-black"
+                          }`}
+                      onClick={() => handleChange({ layout: "grid" })}
+                  />
+                  <BsListUl
+                      className={`cursor-pointer ${layout === "list" ? "text-[#B88E2F]" : "text-black"
+                          }`}
+                      onClick={() => handleChange({ layout: "list" })}
+                  />
+              </div>
 
-                {/* Divider */}
-                <div className="h-6 border-l border-gray-400"></div>
+              <div className="h-6 border-l border-gray-400"></div>
 
-                {/* Results Info */}
-                <p className="text-sm text-gray-800">
-                    Showing <span className="font-semibold">1–16</span> of{" "}
-                    <span className="font-semibold">32</span> results
-                </p>
-            </div>
+              {/* Dynamic Pagination Info */}
+              <p className="text-sm text-gray-800">
+                  Showing{" "}
+                  <span className="font-semibold">{startIndex}</span>–
+                  <span className="font-semibold">{endIndex}</span> of{" "}
+                  <span className="font-semibold">{totalProducts}</span> results
+              </p>
+          </div>
 
-            {/* Right Section - Show & Sort */}
-            <div className="flex items-center gap-3 flex-wrap mt-3 sm:mt-0">
-                {/* Show count */}
-                <span className="font-medium">Show</span>
-                <input
-                    type="text"
-                    value="16"
-                    readOnly
-                    className="w-14 text-center border-none bg-white py-1 px-2 text-gray-500"
-                />
+          {/* Right Section */}
+          <div className="flex items-center gap-4 flex-wrap mt-3 sm:mt-0">
+              {/* Category Filter */}
+              <div className="flex gap-2 items-center">
+                  <label className="font-medium">Category:</label>
+                  <select
+                      className="bg-white text-gray-600 px-2 py-1 rounded-md"
+                      value={category}
+                      onChange={(e) => handleChange({ category: e.target.value })}
+                  >
+                      <option value="all">All</option>
+                      <option value="chair">Chair</option>
+                      <option value="sofa">Sofa</option>
+                      <option value="outdoor">Outdoor</option>
+                  </select>
+              </div>
 
-                {/* Sort by */}
-                <span className="font-medium">Sort by</span>
-                <select
-                    className="bg-white text-gray-400 border-none px-3 py-1 focus:outline-none"
-                    defaultValue="Default"
-                >
-                    <option value="Default">Default</option>
-                    <option value="PriceLowHigh">Price: Low to High</option>
-                    <option value="PriceHighLow">Price: High to Low</option>
-                    <option value="Newest">Newest</option>
-                </select>
-            </div>
-        </div>
-    );
+              {/* Price Filter */}
+              <div className="flex gap-2 items-center">
+                  <label className="font-medium">Price:</label>
+                  <select
+                      className="bg-white text-gray-600 px-2 py-1 rounded-md"
+                      value={priceRange}
+                      onChange={(e) => handleChange({ priceRange: e.target.value })}
+                  >
+                      <option value="all">All</option>
+                      <option value="low">Under Rp 1.000.000</option>
+                      <option value="mid">Rp 1.000.000 - Rp 5.000.000</option>
+                      <option value="high">Above Rp 5.000.000</option>
+                  </select>
+              </div>
+
+              {/* Sort By */}
+              <div className="flex gap-2 items-center">
+                  <label className="font-medium">Sort by:</label>
+                  <select
+                      className="bg-white text-gray-600 px-3 py-1 rounded-md"
+                      value={sort}
+                      onChange={(e) => handleChange({ sort: e.target.value })}
+                  >
+                      <option value="default">Default</option>
+                      <option value="lowToHigh">Price: Low to High</option>
+                      <option value="highToLow">Price: High to Low</option>
+                      <option value="newest">Newest</option>
+                  </select>
+              </div>
+          </div>
+      </div>
+  );
 };
 
 export default ShopFilterBar;
