@@ -3,18 +3,12 @@
 import React, { useState, useMemo } from "react";
 import Image from "next/image";
 import { FiShare2, FiHeart, FiShoppingCart } from "react-icons/fi";
-
-interface Product {
-    id: number;
-    name: string;
-    description: string;
-    price: number;
-    oldPrice?: number;
-    tag?: "new" | "discount";
-    discount?: string;
-    img: string;
-    category: string;
-}
+import { useRouter } from "next/navigation";
+import { products } from "@/src/data/products"; // ✅ import centralized data
+import { useCartStore } from "@/src/store/cartStore";
+import Toast from "../ui/Toast";
+import { useWishlistStore } from "@/src/store/wishlistStore";
+import WishlistButton from "../ui/WishlistButton";
 
 interface ShopProductsProps {
     filters: {
@@ -25,111 +19,82 @@ interface ShopProductsProps {
     };
 }
 
-const productsData: Product[] = [
-    {
-        id: 1,
-        name: "Syltherine",
-        description: "Stylish cafe chair",
-        price: 2500000,
-        oldPrice: 3500000,
-        tag: "discount",
-        discount: "-30%",
-        category: "chair",
-        img: "/home/products/product1.svg",
-    },
-    {
-        id: 2,
-        name: "Leviosa",
-        description: "Stylish cafe chair",
-        price: 2500000,
-        category: "chair",
-        img: "/home/products/product1.svg",
-    },
-    {
-        id: 3,
-        name: "Lolito",
-        description: "Luxury big sofa",
-        price: 7000000,
-        oldPrice: 14000000,
-        tag: "discount",
-        discount: "-50%",
-        category: "sofa",
-        img: "/home/products/product1.svg",
-    },
-    {
-        id: 4,
-        name: "Respira",
-        description: "Outdoor bar table and stool",
-        price: 500000,
-        tag: "new",
-        category: "outdoor",
-        img: "/home/products/product1.svg",
-    },
-    ...Array(8).fill({
-        id: 5,
-        name: "Syltherine",
-        description: "Stylish cafe chair",
-        price: 2500000,
-        oldPrice: 3500000,
-        tag: "discount",
-        discount: "-30%",
-        category: "chair",
-        img: "/home/products/product1.svg",
-    }), ...Array(8).fill({
-        id: 5,
-        name: "Syltherine",
-        description: "Stylish cafe chair",
-        price: 2500000,
-        oldPrice: 3500000,
-        tag: "discount",
-        discount: "-30%",
-        category: "chair",
-        img: "/home/products/product1.svg",
-    }),
-];
-
 const ShopProducts: React.FC<ShopProductsProps> = ({ filters }) => {
+
+
+    const addToCart = useCartStore((state) => state.addToCart);
+    const [added, setAdded] = useState(false);
+    const [showToast, setShowToast] = useState(false);
+
     const [currentPage, setCurrentPage] = useState(1);
     const productsPerPage = 12;
+    const router = useRouter();
+    const addToWishlist = useWishlistStore((state) => state.addToWishlist);
+    const removeFromWishlist = useWishlistStore((state) => state.removeFromWishlist);
+    const isInWishlist = useWishlistStore((state) => state.isInWishlist);
+    const [wishAdded, setWishAdded] = useState(false);
 
-    // --- Filter Logic ---
+
+    // --- Filtering Logic ---
     const filteredProducts = useMemo(() => {
-        let result = [...productsData];
+        let result = [...products];
 
-        // Category filter
         if (filters.category !== "all") {
             result = result.filter(
-                (product) => product.category.toLowerCase() === filters.category
+                (p) => p.category.toLowerCase() === filters.category
             );
         }
 
-        // Price range filter
         if (filters.priceRange !== "all") {
-            result = result.filter((product) => {
-                if (filters.priceRange === "low") return product.price < 1000000;
+            result = result.filter((p) => {
+                if (filters.priceRange === "low") return p.price < 1000000;
                 if (filters.priceRange === "mid")
-                    return product.price >= 1000000 && product.price <= 5000000;
-                if (filters.priceRange === "high") return product.price > 5000000;
+                    return p.price >= 1000000 && p.price <= 5000000;
+                if (filters.priceRange === "high") return p.price > 5000000;
                 return true;
             });
         }
 
-        // Sorting
-        if (filters.sort === "lowToHigh")
-            result.sort((a, b) => a.price - b.price);
+        if (filters.sort === "lowToHigh") result.sort((a, b) => a.price - b.price);
         else if (filters.sort === "highToLow")
             result.sort((a, b) => b.price - a.price);
 
         return result;
     }, [filters]);
 
-    // --- Pagination ---
+    // --- Pagination Logic ---
     const startIndex = (currentPage - 1) * productsPerPage;
     const displayedProducts = filteredProducts.slice(
         startIndex,
         startIndex + productsPerPage
     );
     const totalPages = Math.ceil(filteredProducts.length / productsPerPage);
+
+    // --- Navigation ---
+    const handleProductClick = (slug: string) => {
+        router.push(`/shop/${slug}`);
+    };
+
+    const CheckIcon = () => (
+        <svg width="20" height="20" fill="none" stroke="white" strokeWidth="3" viewBox="0 0 24 24">
+            <path d="M5 13l4 4L19 7"></path>
+        </svg>
+    );
+
+    const HeartIcon = ({ active }: { active: boolean }) => (
+        <svg
+            className={`w-5 h-5 transition-all duration-300 ${active
+                ? "fill-red-500 stroke-red-500 scale-110"
+                : "fill-transparent stroke-gray-600"
+                }`}
+            strokeWidth="2"
+            viewBox="0 0 24 24"
+        >
+            <path d="M12 21s-6-4.4-10-9.5S2 2 7 2s5 4 5 4 2-4 7-4 5 4 5 9.5S12 21 12 21z" />
+        </svg>
+    );
+
+
 
     return (
         <section className="bg-white py-16">
@@ -141,10 +106,11 @@ const ShopProducts: React.FC<ShopProductsProps> = ({ filters }) => {
                         : "grid-cols-1"
                         } gap-6`}
                 >
-                    {displayedProducts.map((product, index) => (
+                    {displayedProducts.map((product) => (
                         <div
-                            key={`${product.id}-${index}`}
-                            className="relative group bg-white shadow-sm transition-all hover:shadow-md"
+                            key={product.id}
+                            onClick={() => handleProductClick(product.slug)}
+                            className="relative group bg-white shadow-sm transition-all hover:shadow-md cursor-pointer"
                         >
                             {/* Product Image */}
                             <div className="relative overflow-hidden">
@@ -156,7 +122,7 @@ const ShopProducts: React.FC<ShopProductsProps> = ({ filters }) => {
                                     className="w-full h-[350px] object-cover transition-transform duration-300 group-hover:scale-105"
                                 />
 
-                                {/* Discount/New Badge */}
+                                {/* Tag Badges */}
                                 {product.tag === "discount" && (
                                     <span className="absolute top-3 right-3 bg-[#E97171] text-white text-xs font-semibold px-3 py-1 rounded-full">
                                         {product.discount}
@@ -169,20 +135,55 @@ const ShopProducts: React.FC<ShopProductsProps> = ({ filters }) => {
                                 )}
 
                                 {/* Hover Overlay */}
-                                <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex flex-col justify-center items-center transition-all duration-300">
-                                    <button className="bg-white text-[#B88E2F] font-semibold px-6 py-2 mb-4 hover:bg-[#B88E2F] hover:text-white transition-all">
-                                        Add to cart
-                                    </button>
-                                    <div className="flex gap-6 text-white text-sm">
-                                        <button className="flex items-center gap-1 hover:text-[#B88E2F]">
-                                            <FiShare2 /> Share
+                                <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-all duration-300">
+                                    <div className="flex flex-col justify-center items-center mt-64">
+                                        <button
+                                            onClick={(e) => {
+                                                addToCart({
+                                                    id: product.id,
+                                                    name: product.name,
+                                                    price: product.price,
+                                                    img: product.img,
+                                                    slug: product.slug,
+                                                    quantity: 1,
+                                                });
+
+                                                setAdded(true);
+                                                setTimeout(() => setAdded(false), 1200);
+                                            }}
+                                            className={`bg-white px-6 py-2 font-semibold rounded transition-all ${added ? "bg-green-600 text-white scale-95" : "text-[#B88E2F] hover:bg-[#B88E2F] hover:text-white"
+                                                }`}
+                                        >
+                                            {added ?
+                                                <>
+                                                    <CheckIcon /> Added!
+                                                </>
+                                                : "Add to cart"}
                                         </button>
-                                        <button className="flex items-center gap-1 hover:text-[#B88E2F]">
-                                            <FiShoppingCart /> Compare
-                                        </button>
-                                        <button className="flex items-center gap-1 hover:text-[#B88E2F]">
-                                            <FiHeart /> Like
-                                        </button>
+
+                                        <WishlistButton
+                                            product={{
+                                                id: product.id,
+                                                name: product.name,
+                                                price: product.price,
+                                                img: product.img,
+                                                slug: product.slug,
+                                            }}
+                                            size="md"
+                                        />
+
+
+                                        <div className="flex gap-6 text-white text-sm">
+                                            <button className="flex items-center gap-1 hover:text-[#B88E2F]">
+                                                <FiShare2 /> Share
+                                            </button>
+                                            <button className="flex items-center gap-1 hover:text-[#B88E2F]">
+                                                <FiShoppingCart /> Compare
+                                            </button>
+                                            <button className="flex items-center gap-1 hover:text-[#B88E2F]">
+                                                <FiHeart /> Like
+                                            </button>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -210,7 +211,6 @@ const ShopProducts: React.FC<ShopProductsProps> = ({ filters }) => {
 
                 {/* Pagination */}
                 <div className="flex justify-center items-center gap-3 mt-10">
-                    {/* Previous Button */}
                     <button
                         onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
                         disabled={currentPage === 1}
@@ -222,7 +222,6 @@ const ShopProducts: React.FC<ShopProductsProps> = ({ filters }) => {
                         Previous
                     </button>
 
-                    {/* Page Numbers */}
                     {Array.from({ length: totalPages }, (_, i) => (
                         <button
                             key={i + 1}
@@ -236,7 +235,6 @@ const ShopProducts: React.FC<ShopProductsProps> = ({ filters }) => {
                         </button>
                     ))}
 
-                    {/* Next Button */}
                     <button
                         onClick={() =>
                             setCurrentPage((prev) => Math.min(prev + 1, totalPages))
