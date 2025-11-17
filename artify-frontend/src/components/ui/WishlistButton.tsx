@@ -36,7 +36,7 @@ export default function WishlistButton({ product, size = "md" }: Props) {
     };
     const HeartIcon = ({ active }: { active: boolean }) => (
         <svg
-            className={`w-5 h-5 transition-all duration-300 ${active
+            className={`w-5 h-5 transition-all duration-300 bg-white  font-semibold rounded   ${active
                 ? "fill-red-500 stroke-red-500 scale-110"
                 : "fill-transparent stroke-gray-600"
                 }`}
@@ -55,11 +55,11 @@ export default function WishlistButton({ product, size = "md" }: Props) {
                     toggleWishlist();
                 }}
                 className={`
-          flex items-center justify-center gap-2 rounded-md border font-medium transition-all
+          flex items-center justify-center gap-2 rounded-md border font-medium transition-all bg-white
           ${size === "lg" ? "px-8 py-3 text-base" : "px-4 py-2 text-sm"}
           ${isInWishlist(product.id)
                         ? "bg-red-500 text-white border-red-500"
-                        : "border-gray-400 text-gray-700 hover:bg-gray-100"}
+                    : "text-[#B88E2F] hover:bg-[#B88E2F] hover:text-white"}
           ${addedAnim ? "scale-95" : ""}
         `}
             >
