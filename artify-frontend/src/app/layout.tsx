@@ -3,6 +3,8 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import Navbar from "../components/navbar/NavBar";
 import Footer from "../components/footer/Footer";
+import CartDrawer from "../components/cart/CartDrawer";
+import WishlistDrawer from "../components/wishlist/WishlistDrawer";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -31,7 +33,10 @@ export default function RootLayout({
       >
         <Navbar />
         {/* Page Content */}
+
         <div className="relative z-10">{children}</div>
+        <CartDrawer />
+        <WishlistDrawer />
         <Footer />
 
       </body>

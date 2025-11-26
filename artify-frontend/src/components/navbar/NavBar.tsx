@@ -6,11 +6,15 @@ import Link from "next/link";
 import Image from "next/image";
 import { useCartStore } from "@/src/store/cartStore";
 import { useWishlistStore } from "@/src/store/wishlistStore";
+import IconButton from "../ui/IconButton";
+import { useUIStore } from "@/src/store/uiStore";
 
 const Navbar: React.FC = () => {
 
-    const totalWishlist = useWishlistStore((state) => state.totalWishlist);
-
+    const openWishlist = useUIStore((s) => s.openWishlist);
+    const openCart = useUIStore((s) => s.openCart);
+    const totalCartItems = useCartStore((s) => s.items.reduce((a, b) => a + b.quantity, 0));
+    const totalWishlist = useWishlistStore((s) => s.items.length);
     // Animations
     const [animateBadge, setAnimateBadge] = useState(false);
     const [animateCart, setAnimateCart] = useState(false);
@@ -64,44 +68,19 @@ const Navbar: React.FC = () => {
                     <FiUser className="w-5 h-5 cursor-pointer hover:text-primary transition" />
                     <FiSearch className="w-5 h-5 cursor-pointer hover:text-primary transition" />
 
-                    <div className="relative">
-                        <Link href="/wishlist" className="text-xl">
+                    <IconButton ariaLabel="Open wishlist" onClick={() => openWishlist()}>
+                        <div className="relative">
+                            <FiHeart className="text-gray-800" />
+                            {totalWishlist > 0 && <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs px-1 rounded-full">{totalWishlist}</span>}
+                        </div>
+                    </IconButton>
 
-                            <FiHeart className="w-5 h-5 cursor-pointer hover:text-primary transition" />
-                        </Link>
-
-                        {totalWishlist > 0 && (
-                            <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs px-2 py-[2px] rounded-full shadow-md">
-                                {totalWishlist}
-                            </span>
-                        )}
-                    </div>
-
-
-                    {/* Cart Icon */}
-                    <div className="relative">
-                        <Link
-                            href="/cart"
-                            className={`text-2xl inline-block transition-all ${animateCart ? "animate-bounce" : ""
-                                }`}
-                        >
-                            <span className="text-2xl">
-                                <FiShoppingCart className="w-5 h-5 cursor-pointer hover:text-primary transition" />
-                            </span>
-                        </Link>
-
-                        {/* Live Count Badge */}
-                        {totalItems > 0 && (
-                            <span
-                                aria-live="polite"
-                                className={`absolute -top-2 -right-2 bg-[#B88E2F] text-white text-xs px-2 py-[2px] rounded-full shadow-md transition-transform ${animateBadge ? "scale-125" : "scale-100"
-                                    }`}
-                            >
-                                {totalItems}
-                            </span>
-                        )}
-
-                    </div>
+                    <IconButton ariaLabel="Open cart" onClick={() => openCart()}>
+                        <div className="relative">
+                            <FiShoppingCart className="text-gray-800" />
+                            {totalCartItems > 0 && <span className="absolute -top-2 -right-2 bg-[#B88E2F] text-white text-xs px-1 rounded-full">{totalCartItems}</span>}
+                        </div>
+                    </IconButton>
                 </div>
             </div>
         </header>

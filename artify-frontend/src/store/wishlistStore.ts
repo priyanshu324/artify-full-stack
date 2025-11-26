@@ -2,48 +2,69 @@ import { create } from "zustand";
 import { persist } from "zustand/middleware";
 
 interface WishlistItem {
-  id: number;
-  name: string;
-  price: number;
-  img: string;
-  slug: string;
+    id: number;
+    name: string;
+    price: number;
+    img: string;
+    slug: string;
 }
 
 interface WishlistStore {
-  items: WishlistItem[];
+    items: WishlistItem[];
 
-  addToWishlist: (item: WishlistItem) => void;
-  removeFromWishlist: (id: number) => void;
+    addToWishlist: (item: WishlistItem) => void;
+    removeFromWishlist: (id: number) => void;
+    isInWishlist: (id: number) => boolean;
 
-  isInWishlist: (id: number) => boolean;
-
-  totalWishlist: number;
+    // 🔥 Bulk features
+    bulkMoveToCart: (cartAdd: (item: any) => void) => void;
+    clearWishlist: () => void;
 }
 
 export const useWishlistStore = create<WishlistStore>()(
-  persist(
-    (set, get) => ({
-      items: [],
+    persist(
+        (set, get) => ({
+            items: [],
 
-      addToWishlist: (item) => {
-        if (get().items.find((i) => i.id === item.id)) return; // avoid duplicates
-        set({ items: [...get().items, item] });
-      },
+            addToWishlist: (item) =>
+                set((state) => {
+                    if (state.items.some((i) => i.id === item.id)) return state;
+                    return { items: [...state.items, item] };
+                }),
 
-      removeFromWishlist: (id) => {
-        set({ items: get().items.filter((i) => i.id !== id) });
-      },
+            removeFromWishlist: (id) =>
+                set((state) => ({
+                    items: state.items.filter((i) => i.id !== id),
+                })),
 
-      isInWishlist: (id) => {
-        return get().items.some((i) => i.id === id);
-      },
+            isInWishlist: (id: number) =>
+                get().items.some((i) => i.id === id),
 
-      get totalWishlist() {
-        return get().items.length;
-      },
-    }),
-    {
-      name: "artify-wishlist",
-    }
-  )
+            // 🔥 Move all wishlist items to cart
+            bulkMoveToCart: (cartAdd) => {
+                const state = get();
+
+                state.items.forEach((item) => {
+                    cartAdd({
+                        id: item.id,
+                        name: item.name,
+                        img: item.img,
+                        slug: item.slug,
+                        price: item.price,
+                        quantity: 1,
+                    });
+                });
+
+                // 🧹 Clear wishlist afterwards
+                set(() => ({ items: [] }));
+            },
+
+            // 🔥 Clear wishlist
+            clearWishlist: () => set(() => ({ items: [] })),
+        }),
+
+        {
+            name: "wishlist-storage", // localStorage key
+        }
+    )
 );
