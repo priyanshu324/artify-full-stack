@@ -1,47 +1,26 @@
 // src/types/order.ts
-export type OrderStatus =
-  | "placed"
-  | "confirmed"
-  | "packed"
-  | "shipped"
-  | "out_for_delivery"
-  | "delivered"
-  | "cancelled"
-  | "returned";
 
-export type OrderItem = {
+export interface OrderItem {
   id: number;
   name: string;
-  slug?: string;
   img: string;
-  price: number; // in rupees
-  qty: number;
-};
+  price: number;
+  quantity: number;
+}
 
-export type Order = {
-  id: string; // order id like "ORD-123456"
-  createdAt: string; // ISO date
-  status: OrderStatus;
+export interface OrderTrackingStep {
+  status: string;
+  date: string;
+  completed: boolean;
+}
+
+export interface Order {
+  orderId: string;
+  placedAt: string;
+  totalAmount: number;
+  status: string;
+  shippingAddress: string;
+  paymentMethod: string;
   items: OrderItem[];
-  shipping: {
-    name: string;
-    phone: string;
-    address: string;
-    city: string;
-    state: string;
-    pincode: string;
-  };
-  subtotal: number;
-  shippingCost: number;
-  discount?: number;
-  total: number;
-  tracking?: {
-    courier: string;
-    trackingId?: string;
-    history?: { date: string; location?: string; status: OrderStatus; note?: string }[];
-  };
-  payment: {
-    method: string;
-    status: "pending" | "paid" | "failed" | "cod";
-  };
-};
+  tracking: OrderTrackingStep[];
+}

@@ -1,72 +1,49 @@
 // src/components/orders/OrderCard.tsx
+
 "use client";
 
-import React from "react";
+import Link from "next/link";
 import Image from "next/image";
-import type { Order } from "@/src/types/order";
+import { Order } from "@/src/types/order";
 
-export default function OrderCard({
-    order,
-    onView,
-}: {
-    order: Order;
-    onView: (id: string) => void;
-}) {
-    const first = order.items[0];
-    const created = new Date(order.createdAt).toLocaleString("en-IN", {
-        dateStyle: "medium",
-        timeStyle: "short",
-    });
-
+export default function OrderCard({ order }: { order: Order }) {
     return (
-        <div className="border rounded-md p-4 hover:shadow-md transition cursor-pointer">
-            <div className="flex items-start gap-4">
-                <div className="w-24 h-24 flex-shrink-0 bg-gray-100 rounded overflow-hidden flex items-center justify-center">
-                    <Image src={first.img} alt={first.name} width={96} height={96} className="object-cover" />
-                </div>
+      <Link
+          href={`/orders/${order.orderId}`}
+          className="border rounded-lg p-5 flex flex-col gap-4 hover:shadow-md transition cursor-pointer bg-white"
+      >
+          <div className="flex justify-between items-center">
+              <h3 className="font-semibold text-lg">Order #{order.orderId}</h3>
+              <span
+                  className={`px-3 py-1 rounded text-sm ${order.status === "Delivered"
+                          ? "bg-green-100 text-green-700"
+                          : order.status === "Shipped"
+                              ? "bg-blue-100 text-blue-700"
+                              : "bg-yellow-100 text-yellow-700"
+                      }`}
+              >
+                  {order.status}
+              </span>
+          </div>
 
-                <div className="flex-1">
-                    <div className="flex items-start justify-between">
-                        <div>
-                            <h3 className="text-lg font-semibold">{order.id}</h3>
-                            <p className="text-sm text-gray-500">{created}</p>
-                        </div>
+          <p className="text-gray-600 text-sm">Placed on: {order.placedAt}</p>
 
-                        <div className="text-right">
-                            <p className="font-semibold">Rs. {order.total.toLocaleString("en-IN")}</p>
-                            <p className="text-sm text-gray-600">{order.payment.method}</p>
-                        </div>
-                    </div>
+          <div className="flex gap-3 mt-3">
+              {order.items.slice(0, 3).map((item) => (
+                  <Image
+                      key={item.id}
+                      src={item.img}
+                      alt={item.name}
+                      width={60}
+                      height={60}
+                      className="rounded object-cover border"
+                  />
+              ))}
+          </div>
 
-                    <div className="mt-3 flex items-center gap-4 text-sm text-gray-700">
-                        <div>
-                            <span className="font-medium">{order.items.length}</span> items —{" "}
-                            <span className="text-gray-600">{order.status.replace(/_/g, " ")}</span>
-                        </div>
-                        <div className="ml-auto flex gap-2">
-                            <button
-                                onClick={(e) => {
-                                    e.stopPropagation();
-                                    onView(order.id);
-                                }}
-                                className="px-3 py-1 border rounded text-sm"
-                            >
-                                View
-                            </button>
-                            <button
-                                onClick={(e) => {
-                                    e.stopPropagation();
-                                    // reorder behavior (front-end)
-                                    alert("Reorder action (front-end) — implement API later.");
-                                }}
-                                className="px-3 py-1 bg-[#B88E2F] text-white rounded text-sm"
-                            >
-                                Reorder
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    );
+          <p className="text-gray-800 font-medium mt-2">
+              Total: Rs. {order.totalAmount.toLocaleString("en-IN")}
+          </p>
+      </Link>
+  );
 }
