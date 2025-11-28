@@ -3,8 +3,11 @@
 import { useMemo } from "react";
 import { useCartStore } from "@/src/store/cartStore";
 import Image from "next/image";
+import { useUIStore } from "@/src/store/uiStore";
 
 export default function CartPage() {
+    const { isCartOpen, closeCart } = useUIStore();
+
     const items = useCartStore((s) => s.items);
     const increaseQty = useCartStore((s) => s.increaseQty);
     const decreaseQty = useCartStore((s) => s.decreaseQty);
@@ -104,7 +107,12 @@ export default function CartPage() {
                       </span>
                   </p>
 
-                  <button className="w-full bg-[#B88E2F] text-white py-3 rounded-md font-semibold">
+                    <button
+                        onClick={() => {
+                            closeCart();
+                            window.location.href = "/checkout";
+                        }}
+                        className="w-full bg-[#B88E2F] text-white py-3 rounded-md font-semibold">
                       Proceed to Checkout
                   </button>
 

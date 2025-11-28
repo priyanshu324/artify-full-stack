@@ -1,27 +1,27 @@
 // src/data/products.ts
 
-export interface Product {
-  id: number;
-  slug: string;
-  name: string;
-  description: string;
-  descriptionLong: string;
-  price: number;
-  oldPrice?: number;
-  tag?: "new" | "discount";
-  discount?: string;
-  category: string;
-  img: string; // shop card image
-  images: string[]; // detail page gallery
-  sizes: string[];
-  colors: { name: string; code: string }[];
-  sku: string;
-  rating: number;
-  reviews: number;
-  tags: string[];
-}
+// export interface Product {
+//   id: number;
+//   slug: string;
+//   name: string;
+//   description: string;
+//   descriptionLong: string;
+//   price: number;
+//   oldPrice?: number;
+//   tag?: "new" | "discount";
+//   discount?: string;
+//   category: string;
+//   img: string; // shop card image
+//   images: string[]; // detail page gallery
+//   sizes: string[];
+//   colors: { name: string; code: string }[];
+//   sku: string;
+//   rating: number;
+//   reviews: number;
+//   tags: string[];
+// }
 
-export const products: Product[] = [
+export const products = [
   {
     id: 1,
     slug: "syltherine",

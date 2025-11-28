@@ -1,3 +1,5 @@
+"use client";
+
 import ProductDetailsSkeleton from "@/src/components/shop/common/ProductDetailsSkeleton";
 import ProductTabsSkeleton from "@/src/components/shop/common/ProductTabsSkeleton";
 import RelatedProductsSkeleton from "@/src/components/shop/common/RelatedProductsSkeleton";

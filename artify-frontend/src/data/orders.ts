@@ -1,62 +1,46 @@
 // src/data/orders.ts
-// TODO (Backend): Replace mock data with API response
-
-import { Order } from "@/src/types/order";
+import type { Order } from "@/src/types/order";
 
 export const orders: Order[] = [
   {
     orderId: "ORD-1001",
-    placedAt: "2025-01-14",
-    totalAmount: 12500,
+    placedAt: "2025-11-01",
     status: "Shipped",
-    shippingAddress: "123 Street, Jaipur, Rajasthan",
-    paymentMethod: "UPI (Google Pay)",
+    shippingAddress: "Priyanshu Saini, 123 MG Road, Jaipur, Rajasthan, India",
+    shippingPhone: "+91-9000000000",
     items: [
-      {
-        id: 1,
-        name: "Syltherine Chair",
-        img: "/home/products/product1.svg",
-        price: 3500,
-        quantity: 2,
-      },
-      {
-        id: 2,
-        name: "Luxury Sofa",
-        img: "/home/products/product1.svg",
-        price: 5500,
-        quantity: 1,
-      },
+      { id: 1, name: "Asgaard Sofa", img: "/shop/products/thumb1.svg", price: 250000, quantity: 1, slug: "asgaard-sofa" },
+      { id: 3, name: "Leviosa", img: "/home/products/product2.svg", price: 120000, quantity: 2, slug: "leviosa" },
     ],
+    subtotal: 490000,
+    shippingFee: 150,
+    totalAmount: 490150,
     tracking: [
-      { status: "Order Placed", date: "12 Jan", completed: true },
-      { status: "Packed", date: "13 Jan", completed: true },
-      { status: "Shipped", date: "14 Jan", completed: true },
-      { status: "Out for Delivery", date: "Pending", completed: false },
-      { status: "Delivered", date: "Pending", completed: false },
+      { id: 1, date: "2025-11-02", title: "Order confirmed", subtitle: "We have accepted your order", done: true },
+      { id: 2, date: "2025-11-03", title: "Packed", subtitle: "Packed and ready", done: true },
+      { id: 3, date: "2025-11-04", title: "Shipped", subtitle: "Handed to courier", done: true },
+      { id: 4, date: "2025-11-05", title: "Out for Delivery", subtitle: "Courier out for delivery", done: false },
+      { id: 5, date: "2025-11-06", title: "Delivered", subtitle: "Delivered to recipient", done: false },
     ],
   },
   {
     orderId: "ORD-1002",
-    placedAt: "2025-01-09",
-    totalAmount: 7600,
+    placedAt: "2025-10-20",
     status: "Delivered",
-    shippingAddress: "Sector 21, Gurugram, Haryana",
-    paymentMethod: "Cash on Delivery",
+    shippingAddress: "Another Address, City, State",
+    shippingPhone: "+91-9000000001",
     items: [
-      {
-        id: 3,
-        name: "Modern Lamp",
-        img: "/home/products/product1.svg",
-        price: 2600,
-        quantity: 2,
-      },
+      { id: 4, name: "Lolito Sofa", img: "/home/products/product3.svg", price: 7000000, quantity: 1, slug: "lolito-sofa" },
     ],
+    subtotal: 7000000,
+    shippingFee: 300,
+    totalAmount: 7000300,
     tracking: [
-      { status: "Order Placed", date: "7 Jan", completed: true },
-      { status: "Packed", date: "8 Jan", completed: true },
-      { status: "Shipped", date: "9 Jan", completed: true },
-      { status: "Out for Delivery", date: "10 Jan", completed: true },
-      { status: "Delivered", date: "10 Jan", completed: true },
+      { id: 1, date: "2025-10-21", title: "Order confirmed", done: true },
+      { id: 2, date: "2025-10-22", title: "Packed", done: true },
+      { id: 3, date: "2025-10-23", title: "Shipped", done: true },
+      { id: 4, date: "2025-10-24", title: "Out for Delivery", done: true },
+      { id: 5, date: "2025-10-24", title: "Delivered", done: true },
     ],
   },
 ];

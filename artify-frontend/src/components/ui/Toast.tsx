@@ -1,34 +1,22 @@
+// src/components/ui/Toast.tsx
 "use client";
+import React, { useEffect } from "react";
 
-import { useEffect, useState } from "react";
+interface Props { message: string }
 
-interface ToastProps {
-    message: string;
-}
+const Toast: React.FC<Props> = ({ message }) => {
+  useEffect(() => {
+    const t = setTimeout(() => { }, 1200);
+    return () => clearTimeout(t);
+  }, [message]);
 
-export default function Toast({ message }: ToastProps) {
-    const [show, setShow] = useState(true);
+  return (
+    <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50">
+      <div className="bg-black/90 text-white px-4 py-2 rounded-md shadow">
+        {message}
+      </div>
+    </div>
+  );
+};
 
-    useEffect(() => {
-        const t = setTimeout(() => setShow(false), 2000);
-        return () => clearTimeout(t);
-    }, []);
-
-    if (!show) return null;
-
-    return (
-        <div className="fixed bottom-10 right-10 bg-green-600 text-white px-5 py-3 rounded-md shadow-xl text-sm animate-slideUp z-[9999]">
-            {message}
-
-            <style>{`
-        .animate-slideUp {
-          animation: slideUp .25s ease-out;
-        }
-        @keyframes slideUp {
-          from { opacity:0; transform: translateY(20px); }
-          to { opacity:1; transform: translateY(0); }
-        }
-      `}</style>
-        </div>
-    );
-}
+export default Toast;

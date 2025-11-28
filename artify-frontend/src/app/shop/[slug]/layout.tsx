@@ -1,3 +1,5 @@
+"use client";
+
 import ProductBreadcrumbSkeleton from "@/src/components/shop/common/ProductBreadcrumbSkeleton";
 import ProductBreadcrumb from "@/src/components/shop/product/ProductBreadcrumb";
 

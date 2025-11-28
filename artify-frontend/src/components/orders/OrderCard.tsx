@@ -1,49 +1,25 @@
-// src/components/orders/OrderCard.tsx
-
 "use client";
-
+import React from "react";
+import type { Order } from "@/src/types/order";
 import Link from "next/link";
-import Image from "next/image";
-import { Order } from "@/src/types/order";
 
 export default function OrderCard({ order }: { order: Order }) {
     return (
-      <Link
-          href={`/orders/${order.orderId}`}
-          className="border rounded-lg p-5 flex flex-col gap-4 hover:shadow-md transition cursor-pointer bg-white"
-      >
-          <div className="flex justify-between items-center">
-              <h3 className="font-semibold text-lg">Order #{order.orderId}</h3>
-              <span
-                  className={`px-3 py-1 rounded text-sm ${order.status === "Delivered"
-                          ? "bg-green-100 text-green-700"
-                          : order.status === "Shipped"
-                              ? "bg-blue-100 text-blue-700"
-                              : "bg-yellow-100 text-yellow-700"
-                      }`}
-              >
-                  {order.status}
-              </span>
+      <div className="border rounded p-4 flex flex-col md:flex-row justify-between gap-4">
+          <div className="flex gap-4 items-start">
+              <div className="text-sm text-gray-500">{order.placedAt}</div>
+              <div>
+                  <div className="font-semibold text-lg">Order #{order.orderId}</div>
+                  <div className="text-sm text-gray-600">{order.items.map(i => i.name).slice(0, 2).join(", ")}{order.items.length > 2 ? ` +${order.items.length - 2} more` : ""}</div>
+                  <div className="text-sm mt-2">Total: Rs. {order.totalAmount.toLocaleString("en-IN")}</div>
+              </div>
           </div>
 
-          <p className="text-gray-600 text-sm">Placed on: {order.placedAt}</p>
-
-          <div className="flex gap-3 mt-3">
-              {order.items.slice(0, 3).map((item) => (
-                  <Image
-                      key={item.id}
-                      src={item.img}
-                      alt={item.name}
-                      width={60}
-                      height={60}
-                      className="rounded object-cover border"
-                  />
-              ))}
+          <div className="flex items-center gap-3">
+              <div className={`px-3 py-1 rounded text-sm ${order.status === "Delivered" ? "bg-green-100 text-green-700" : "bg-yellow-100 text-yellow-700"}`}>{order.status}</div>
+              <Link href={`/orders/${order.orderId}`} className="px-4 py-2 border rounded">View</Link>
+              <Link href={`/order-summary/${order.orderId}`} className="px-4 py-2 bg-gray-50 border rounded">Receipt</Link>
           </div>
-
-          <p className="text-gray-800 font-medium mt-2">
-              Total: Rs. {order.totalAmount.toLocaleString("en-IN")}
-          </p>
-      </Link>
+      </div>
   );
 }

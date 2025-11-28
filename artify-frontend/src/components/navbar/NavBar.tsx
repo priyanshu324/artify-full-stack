@@ -10,7 +10,6 @@ import IconButton from "../ui/IconButton";
 import { useUIStore } from "@/src/store/uiStore";
 
 const Navbar: React.FC = () => {
-
     const openWishlist = useUIStore((s) => s.openWishlist);
     const openCart = useUIStore((s) => s.openCart);
     const totalCartItems = useCartStore((s) => s.items.reduce((a, b) => a + b.quantity, 0));

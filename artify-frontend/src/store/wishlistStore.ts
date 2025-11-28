@@ -1,70 +1,50 @@
+"use client";
+
 import { create } from "zustand";
-import { persist } from "zustand/middleware";
+import { persist, createJSONStorage } from "zustand/middleware";
 
-interface WishlistItem {
-    id: number;
-    name: string;
-    price: number;
-    img: string;
-    slug: string;
+export interface WishlistItem {
+  id: number;
+  name: string;
+  price: number;
+  img: string;
+  slug: string;
 }
 
-interface WishlistStore {
-    items: WishlistItem[];
+interface WishlistState {
+  items: WishlistItem[];
 
-    addToWishlist: (item: WishlistItem) => void;
-    removeFromWishlist: (id: number) => void;
-    isInWishlist: (id: number) => boolean;
-
-    // 🔥 Bulk features
-    bulkMoveToCart: (cartAdd: (item: any) => void) => void;
-    clearWishlist: () => void;
+  addToWishlist: (item: WishlistItem) => void;
+  removeFromWishlist: (id: number) => void;
+  clearWishlist: () => void;
+  isInWishlist: (id: number) => boolean;
 }
 
-export const useWishlistStore = create<WishlistStore>()(
-    persist(
-        (set, get) => ({
-            items: [],
+export const useWishlistStore = create<WishlistState>()(
+  persist(
+    (set, get) => ({
+      items: [],
 
-            addToWishlist: (item) =>
-                set((state) => {
-                    if (state.items.some((i) => i.id === item.id)) return state;
-                    return { items: [...state.items, item] };
-                }),
+      addToWishlist: (item) => {
+        const exists = get().items.some((i) => i.id === item.id);
+        if (exists) return;
+        set({ items: [...get().items, item] });
+      },
 
-            removeFromWishlist: (id) =>
-                set((state) => ({
-                    items: state.items.filter((i) => i.id !== id),
-                })),
+      removeFromWishlist: (id) => {
+        set({ items: get().items.filter((i) => i.id !== id) });
+      },
 
-            isInWishlist: (id: number) =>
-                get().items.some((i) => i.id === id),
+      clearWishlist: () => {
+        set({ items: [] });
+      },
 
-            // 🔥 Move all wishlist items to cart
-            bulkMoveToCart: (cartAdd) => {
-                const state = get();
+      isInWishlist: (id) => get().items.some((i) => i.id === id),
+    }),
 
-                state.items.forEach((item) => {
-                    cartAdd({
-                        id: item.id,
-                        name: item.name,
-                        img: item.img,
-                        slug: item.slug,
-                        price: item.price,
-                        quantity: 1,
-                    });
-                });
-
-                // 🧹 Clear wishlist afterwards
-                set(() => ({ items: [] }));
-            },
-
-            // 🔥 Clear wishlist
-            clearWishlist: () => set(() => ({ items: [] })),
-        }),
-
-        {
-            name: "wishlist-storage", // localStorage key
-        }
-    )
+    {
+      name: "wishlist-storage",
+      storage: createJSONStorage(() => localStorage), // ✅ FIXED
+    }
+  )
 );

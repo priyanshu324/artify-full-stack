@@ -1,94 +1,90 @@
+"use client";
+
 import { create } from "zustand";
-import { persist } from "zustand/middleware";
+import { persist, createJSONStorage } from "zustand/middleware";
 
-interface CartItem {
-    id: number;
-    name: string;
-    description?: string;
-    price: number;
-    img: string;
-    slug: string;
-    quantity: number;
+export interface CartItem {
+  id: number;
+  name: string;
+  description?: string;
+  price: number;
+  img: string;
+  slug: string;
+  quantity: number;
 }
 
-interface CartStore {
-    items: CartItem[];
+interface CartState {
+  items: CartItem[];
 
-    addToCart: (item: CartItem) => void;
-    increaseQty: (id: number) => void;
-    decreaseQty: (id: number) => void;
-    removeFromCart: (id: number) => void;
-    clearCart: () => void;
+  addToCart: (item: CartItem) => void;
+  removeFromCart: (id: number) => void;
+  increaseQty: (id: number) => void;
+  decreaseQty: (id: number) => void;
+  clearCart: () => void;
 
-    totalItems: number;
-    totalPrice: number;
+  getSubtotal: () => number;
+  getItemCount: () => number;
 }
 
-export const useCartStore = create<CartStore>()(
-    persist(
-        (set, get) => ({
-            items: [],
+export const useCartStore = create<CartState>()(
+  persist(
+    (set, get) => ({
+      items: [],
 
-            // ✅ PREVENT DUPLICATES + INCREASE QTY IF EXISTS
-            addToCart: (product) =>
-                set((state) => {
-                    const existing = state.items.find((i) => i.id === product.id);
+      // Add to cart (if exists → increase qty)
+      addToCart: (item) => {
+        const cart = get().items;
+        const existing = cart.find((i) => i.id === item.id);
 
-                    if (existing) {
-                        return {
-                            items: state.items.map((i) =>
-                                i.id === product.id
-                                    ? { ...i, quantity: i.quantity + 1 }
-                                    : i
-                            ),
-                        };
-                    }
-
-                    return {
-                        items: [...state.items, { ...product, quantity: 1 }],
-                    };
-                }),
-
-            increaseQty: (id) =>
-                set((state) => ({
-                    items: state.items.map((i) =>
-                        i.id === id ? { ...i, quantity: i.quantity + 1 } : i
-                    ),
-                })),
-
-            decreaseQty: (id) =>
-                set((state) => ({
-                    items: state.items
-                        .map((i) =>
-                            i.id === id
-                                ? { ...i, quantity: Math.max(1, i.quantity - 1) }
-                                : i
-                        )
-                        .filter((i) => i.quantity > 0),
-                })),
-
-            removeFromCart: (id) =>
-                set((state) => ({
-                    items: state.items.filter((i) => i.id !== id),
-                })),
-
-            clearCart: () => set({ items: [] }),
-
-            // Computed values
-            get totalItems() {
-                return get().items.reduce((sum, i) => sum + i.quantity, 0);
-            },
-
-            get totalPrice() {
-                return get().items.reduce(
-                    (sum, i) => sum + i.price * i.quantity,
-                    0
-                );
-            },
-        }),
-
-        {
-            name: "cart-storage", // localStorage key
+        if (existing) {
+          set({
+            items: cart.map((i) =>
+              i.id === item.id ? { ...i, quantity: i.quantity + item.quantity } : i
+            ),
+          });
+        } else {
+          set({ items: [...cart, item] });
         }
-    )
+      },
+
+      // Remove a single product
+      removeFromCart: (id) => {
+        set({ items: get().items.filter((i) => i.id !== id) });
+      },
+
+      // Increase quantity
+      increaseQty: (id) => {
+        set({
+          items: get().items.map((i) =>
+            i.id === id ? { ...i, quantity: i.quantity + 1 } : i
+          ),
+        });
+      },
+
+      // Decrease quantity (min = 1)
+      decreaseQty: (id) => {
+        set({
+          items: get().items.map((i) =>
+            i.id === id && i.quantity > 1 ? { ...i, quantity: i.quantity - 1 } : i
+          ),
+        });
+      },
+
+      // Remove all products
+      clearCart: () => set({ items: [] }),
+
+      // Subtotal (price × qty)
+      getSubtotal: () =>
+        get().items.reduce((acc, it) => acc + it.price * it.quantity, 0),
+
+      // Count all items
+      getItemCount: () =>
+        get().items.reduce((acc, item) => acc + item.quantity, 0),
+    }),
+
+    {
+      name: "cart-storage",
+      storage: createJSONStorage(() => localStorage), // ✅ FIXED PERSISTENCE
+    }
+  )
 );
