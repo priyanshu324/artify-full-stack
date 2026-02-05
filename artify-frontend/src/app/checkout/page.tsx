@@ -1,61 +1,144 @@
 "use client";
 
 import React, { useState } from "react";
-import CheckoutAddress, { AddressShape } from "./CheckoutAddress";
-import CheckoutPayment, { PaymentShape } from "./CheckoutPayment";
-import CheckoutItems from "./CheckoutItems";
-import CheckoutSummary from "./CheckoutSummary";
+import { useRouter } from "next/navigation";
 
+import CheckoutAddress, { AddressShape } from "./CheckoutAddress";
+import CheckoutPayment, { PaymentMethod } from "./CheckoutPayment";
+import CheckoutItems from "./CheckoutItems";
+import CheckoutLayout from "./CheckoutLayout";
+
+// ✅ Redux hooks
+import { useZSelector, useZDispatch } from "@/src/store/redux/hooks";
+import { clearCart } from "@/src/store/redux/zCart/zCartSlice";
 
 export default function CheckoutPage() {
-    const [step, setStep] = useState<number>(1);
+    const router = useRouter();
+    const dispatch = useZDispatch();
 
-    // Data collected across steps
-    const [address, setAddress] = useState<AddressShape | null>(null);
-    const [payment, setPayment] = useState<PaymentShape | null>(null);
+    // ✅ Redux cart state
+    const items = useZSelector((state) => state.zCart.items);
+
+    // Derived subtotal (Amazon-style)
+    const subtotal = items.reduce(
+        (acc, item) => acc + item.price * item.quantity,
+        0
+    );
+
+    // UI state (LOCAL — NOT Redux)
+    const [activeSection, setActiveSection] = useState<"address" | "payment">(
+        "address"
+    );
+    const [shippingAddress, setShippingAddress] =
+        useState<AddressShape | null>(null);
+
+    // Valid default payment method
+    const [paymentMethod, setPaymentMethod] =
+        useState<PaymentMethod>("visa");
+
+    const handlePlaceOrder = () => {
+        if (!shippingAddress) {
+            alert("Please complete the shipping address.");
+            return;
+        }
+
+        console.log("Placing Order:", {
+            shippingAddress,
+            paymentMethod,
+            items,
+            subtotal,
+        });
+
+        // Online payment check
+        const isOnlinePayment =
+            paymentMethod === "visa" ||
+            paymentMethod === "mastercard" ||
+            paymentMethod === "paypal";
+
+        const mockOrderId = isOnlinePayment
+            ? `ARTIFY-ONLINE-${Date.now()}`
+            : `ARTIFY-COD-${Date.now()}`;
+
+        // ✅ Clear cart via Redux
+        dispatch(clearCart());
+
+        // Redirect
+        router.push(`/checkout/success?orderId=${mockOrderId}`);
+    };
 
     return (
-        <section className="max-w-7xl mx-auto px-4 py-20">
-            <h1 className="text-3xl font-semibold mb-6">Checkout</h1>
+        <CheckoutLayout>
+            {/* 1️⃣ Shipping Address */}
+            <div className="border rounded-lg p-6">
+                <div className="flex justify-between items-center">
+                    <h2 className="text-xl font-semibold">1. Shipping Address</h2>
 
-            {/* Step indicator */}
-            <div className="flex gap-4 mb-8 text-sm">
-                <div className={`px-3 py-1 rounded ${step === 1 ? "bg-[#B88E2F] text-white" : "bg-gray-100"}`}>1. Address</div>
-                <div className={`px-3 py-1 rounded ${step === 2 ? "bg-[#B88E2F] text-white" : "bg-gray-100"}`}>2. Review</div>
-                <div className={`px-3 py-1 rounded ${step === 3 ? "bg-[#B88E2F] text-white" : "bg-gray-100"}`}>3. Payment</div>
-                <div className={`px-3 py-1 rounded ${step === 4 ? "bg-[#B88E2F] text-white" : "bg-gray-100"}`}>4. Summary</div>
-            </div>
+                    {shippingAddress && activeSection !== "address" && (
+                        <button
+                            onClick={() => setActiveSection("address")}
+                            className="text-sm font-medium text-[#B88E2F] cursor-pointer"
+                        >
+                            Change
+                        </button>
+                    )}
+                </div>
 
-            <div className="bg-white p-6 rounded shadow-sm">
-                {step === 1 && (
+                {activeSection === "address" ? (
                     <CheckoutAddress
-                        initial={address ?? undefined}
-                        onNext={(addr) => { setAddress(addr); setStep(2); }}
+                        onNext={(addr) => {
+                            setShippingAddress(addr);
+                            setActiveSection("payment");
+                        }}
                     />
-                )}
-
-                {step === 2 && (
-                    <CheckoutItems
-                        onPrev={() => setStep(1)}
-                        onNext={() => setStep(3)}
-                    />
-                )}
-
-                {step === 3 && (
-                    <CheckoutPayment
-                        onPrev={() => setStep(2)}
-                        onNext={(p) => { setPayment(p); setStep(4); }}
-                    />
-                )}
-
-                {step === 4 && (
-                    <CheckoutSummary
-                        address={address}
-                        payment={payment}
-                        onPrev={() => setStep(3)}
-                    />
+                ) : (
+                    shippingAddress && (
+                        <div className="text-sm mt-4 text-gray-600">
+                            <p className="font-semibold">{shippingAddress.fullName}</p>
+                            <p>
+                                {shippingAddress.address}, {shippingAddress.city},{" "}
+                                {shippingAddress.state} - {shippingAddress.pincode}
+                            </p>
+                            <p>Phone: {shippingAddress.phone}</p>
+                        </div>
+                    )
                 )}
             </div>
-        </section>
+
+            {/* 2️⃣ Review Items */}
+            <div className="border rounded-lg p-6">
+                <h2 className="text-xl font-semibold mb-4">2. Review Items</h2>
+                <CheckoutItems />
+            </div>
+
+            {/* 3️⃣ Payment Method */}
+            <div
+                className={`border rounded-lg p-6 ${!shippingAddress ? "opacity-50 pointer-events-none" : ""
+                    }`}
+            >
+                <h2 className="text-xl font-semibold">3. Payment Method</h2>
+
+                {shippingAddress ? (
+                    <CheckoutPayment
+                        selectedMethod={paymentMethod}
+                        onMethodChange={setPaymentMethod}
+                    />
+                ) : (
+                    <p className="text-sm text-gray-500 mt-2">
+                        Complete your address to select a payment method.
+                    </p>
+                )}
+            </div>
+
+            {/* 4️⃣ Place Order */}
+            <div className="flex justify-end mt-4">
+                <button
+                    onClick={handlePlaceOrder}
+                    disabled={!shippingAddress || items.length === 0}
+                    className="px-8 py-3 bg-green-600 text-white rounded-lg font-semibold disabled:bg-gray-400 disabled:cursor-not-allowed cursor-pointer"
+                >
+                    Place Order
+                </button>
+            </div>
+        </CheckoutLayout>
     );
 }

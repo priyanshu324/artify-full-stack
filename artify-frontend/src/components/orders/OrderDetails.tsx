@@ -3,7 +3,11 @@
 import { useState } from "react";
 import Image from "next/image";
 import { Order, OrderItem, TrackingStep, ReturnRequest } from "@/src/types/order";
-import ReorderModal from "./ReorderModal";
+
+// --- IMPORT THE NEW MODALS ---
+import CancelOrderModal from "./CancelOrderModal";
+import ReturnRequestModal from "./ReturnReplaceModal";
+import Link from "next/link";
 
 interface Props {
     order: Order;
@@ -12,192 +16,122 @@ interface Props {
 export default function OrderDetails({ order }: Props) {
     const [localOrder, setLocalOrder] = useState<Order>(order);
 
-    const [showReorderModal, setShowReorderModal] = useState(false);
-    const [selectedItem, setSelectedItem] = useState<OrderItem | null>(null);
+    // --- STATE TO CONTROL MODAL VISIBILITY ---
+    const [isCancelModalOpen, setCancelModalOpen] = useState(false);
+    const [isReturnModalOpen, setReturnModalOpen] = useState(false);
 
-    // ---------------- CANCEL ORDER ----------------
-    const handleCancelOrder = () => {
+    // --- HANDLER FOR CONFIRMING CANCELLATION ---
+    const handleConfirmCancel = () => {
         const cancelStep: TrackingStep = {
             id: localOrder.tracking.length + 1,
             title: "Order Cancelled",
-            status: `Cancelled — ${new Date().toLocaleDateString()}`,
+            status: `Cancelled by user on ${new Date().toLocaleDateString()}`,
             date: new Date().toISOString(),
             completed: true,
-            note: "The order was cancelled by the user.",
+            note: "The order was cancelled by the user before shipping.",
         };
 
         setLocalOrder((prev) => ({
             ...prev,
             status: "Cancelled",
-            tracking: [...prev.tracking, cancelStep],
+            tracking: [prev.tracking[0], cancelStep], // Keep only the 'confirmed' and 'cancelled' steps
         }));
     };
 
-    // ---------------- RETURN REQUEST ----------------
-    const handleRequestReturn = () => {
-        const req: ReturnRequest = {
-            id: `RET-${Date.now()}`,
-            type: "return",
-            requestedAt: new Date().toISOString(),
-            reason: "Requested by user",
-        };
-
+    // --- HANDLER FOR SUBMITTING A RETURN/REPLACEMENT ---
+    const handleConfirmReturn = (request: ReturnRequest) => {
         setLocalOrder((prev) => ({
             ...prev,
-            status: "Return Requested",
-            returnRequest: req,
+            status: request.type === 'return' ? "Return Requested" : "Replace Requested",
+            returnRequest: request,
         }));
     };
 
-    // ---------------- REPLACE REQUEST ----------------
-    const handleRequestReplacement = () => {
-        const req: ReturnRequest = {
-            id: `REP-${Date.now()}`,
-            type: "replace",
-            requestedAt: new Date().toISOString(),
-            reason: "Replacement requested by user",
-        };
-
-        setLocalOrder((prev) => ({
-            ...prev,
-            status: "Replace Requested",
-            returnRequest: req,
-        }));
-    };
+    // --- DETERMINE WHICH BUTTONS TO SHOW ---
+    const canCancel = ["Pending", "Processing"].includes(localOrder.status);
+    const canReturn = localOrder.status === "Delivered";
 
     return (
-        <section className="max-w-5xl mx-auto py-10 px-4">
-
+        <div className="border rounded-lg p-6 bg-white">
             {/* ORDER HEADER */}
-            <div className="mb-6">
-                <h1 className="text-2xl font-semibold">Order #{localOrder.orderId}</h1>
-                <p className="text-gray-600">Placed on {localOrder.placedAt}</p>
-                <p className="mt-1 text-gray-700 font-semibold">
-                    Status: {localOrder.status}
-                </p>
+            <div className="flex justify-between items-start mb-6">
+                <div>
+                    <h1 className="text-2xl font-semibold">Order #{localOrder.orderId}</h1>
+                    <p className="text-sm text-gray-600">Placed on {new Date(localOrder.placedAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' })}</p>
+                </div>
+                <span className={`px-3 py-1 text-sm font-medium rounded-full 
+                    ${localOrder.status === 'Delivered' ? 'bg-green-100 text-green-800' : ''}
+                    ${localOrder.status === 'Cancelled' ? 'bg-red-100 text-red-800' : ''}
+                    ${localOrder.status === 'Processing' || localOrder.status === 'Shipped' ? 'bg-blue-100 text-blue-800' : ''}
+                `}>
+                    {localOrder.status}
+                </span>
             </div>
 
-            {/* SHIPPING */}
-            <div className="border p-4 rounded-lg mb-6">
-                <h2 className="font-semibold mb-1">Shipping Address</h2>
-                <p>{localOrder.shippingAddress}</p>
-                {localOrder.shippingPhone && (
-                    <p className="text-gray-500 mt-1">Phone: {localOrder.shippingPhone}</p>
-                )}
-            </div>
-
-            {/* TRACKING */}
-            <div className="border p-4 rounded-lg mb-6">
-                <h2 className="font-semibold mb-3">Tracking</h2>
-                {localOrder.tracking.map((step) => (
-                    <div key={step.id} className="flex gap-3 mb-3">
-                        <div className={`w-4 h-4 rounded-full ${step.completed ? "bg-green-600" : "bg-gray-300"}`} />
-                        <div>
-                            <p className="font-medium">{step.title}</p>
-                            <p className="text-sm text-gray-600">{step.status}</p>
-                            <p className="text-xs text-gray-400">{step.date}</p>
+            {/* ITEMS (Removed buttons from here for clarity, they are now at the bottom) */}
+            <div className="border-t border-b py-4">
+                <h3 className="font-semibold mb-4">Items</h3>
+                {localOrder.items.map((item) => (
+                    <div key={item.id} className="flex justify-between items-center mb-4 last:mb-0">
+                        <div className="flex gap-4">
+                            <Image src={item.img} alt={item.name} width={70} height={70} className="rounded-md" />
+                            <div>
+                                <p className="font-medium">{item.name}</p>
+                                <p className="text-sm text-gray-500">Qty: {item.quantity}</p>
+                            </div>
                         </div>
+                        <p className="font-semibold">₹{(item.price * item.quantity).toLocaleString("en-IN")}</p>
                     </div>
                 ))}
             </div>
 
-            {/* ITEMS */}
-            <div className="border p-4 rounded-lg mb-6">
-                <h2 className="font-semibold mb-4">Items</h2>
-
-                {localOrder.items.map((item) => (
-                    <div key={item.id} className="flex justify-between items-center py-4 border-b last:border-none">
-                        <div className="flex gap-4">
-                            <Image src={item.img} alt={item.name} width={70} height={70} />
-                            <div>
-                                <p className="font-medium">{item.name}</p>
-                                <p className="text-sm text-gray-500">Qty: {item.quantity}</p>
-                                <p className="font-semibold">Rp {item.price.toLocaleString("id-ID")}</p>
-                            </div>
-                        </div>
-
-                      <button
-                          onClick={() => {
-                              setSelectedItem(item);
-                              setShowReorderModal(true);
-                          }}
-                          className="px-4 py-2 border rounded hover:bg-gray-100"
-                >
-                          Buy Again
-                      </button>
-                  </div>
-              ))}
-            </div>
-
-            {/* SUMMARY */}
-            <div className="border p-4 rounded-lg mb-6">
-                <h2 className="font-semibold mb-4">Order Summary</h2>
-
-                <div className="flex justify-between py-1 text-sm">
-                    <span>Subtotal</span>
-                    <span>Rp {localOrder.subtotal.toLocaleString("id-ID")}</span>
-                </div>
-
-                <div className="flex justify-between py-1 text-sm">
-                    <span>Shipping</span>
-                    <span>
-                        {localOrder.shippingFee === 0
-                            ? "FREE"
-                            : `Rp ${localOrder.shippingFee.toLocaleString("id-ID")}`}
-                    </span>
-                </div>
-
-                {localOrder.discount !== undefined && (
-                    <div className="flex justify-between py-1 text-sm text-green-600">
-                        <span>Discount</span>
-                        <span>- Rp {localOrder.discount.toLocaleString("id-ID")}</span>
+            {/* SUMMARY & ADDRESS */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
+                <div>
+                    <h3 className="font-semibold mb-2">Order Summary</h3>
+                    <div className="text-sm space-y-1">
+                        <div className="flex justify-between"><span>Subtotal</span><span>₹{localOrder.subtotal.toLocaleString("en-IN")}</span></div>
+                        <div className="flex justify-between"><span>Shipping</span><span>{localOrder.shippingFee === 0 ? "FREE" : `₹${localOrder.shippingFee}`}</span></div>
+                        {localOrder.discount && <div className="flex justify-between text-green-600"><span>Discount</span><span>- ₹{localOrder.discount.toLocaleString("en-IN")}</span></div>}
+                        <div className="flex justify-between font-bold text-base pt-2 border-t mt-2"><span>Total</span><span>₹{localOrder.totalAmount.toLocaleString("en-IN")}</span></div>
                     </div>
-                )}
-
-                <div className="flex justify-between pt-3 mt-2 border-t font-semibold text-lg">
-                    <span>Total</span>
-                    <span>Rp {localOrder.totalAmount.toLocaleString("id-ID")}</span>
+                </div>
+                <div>
+                    <h3 className="font-semibold mb-2">Shipping Address</h3>
+                    <p className="text-sm text-gray-600">{localOrder.shippingAddress}</p>
                 </div>
             </div>
 
-            {/* ACTION BUTTONS */}
-            <div className="flex gap-3">
-                {localOrder.status !== "Cancelled" &&
-                    localOrder.status !== "Delivered" && (
-                        <button
-                            onClick={handleCancelOrder}
-                            className="px-4 py-2 border rounded text-red-600 hover:bg-red-50"
-                        >
-                            Cancel Order
-                        </button>
-                    )}
-
-                {localOrder.status === "Delivered" && (
-                    <>
-                        <button
-                            onClick={handleRequestReturn}
-                            className="px-4 py-2 border rounded hover:bg-gray-100"
-                        >
-                            Request Return
-                        </button>
-                        <button
-                            onClick={handleRequestReplacement}
-                            className="px-4 py-2 border rounded hover:bg-gray-100"
-                        >
-                            Request Replacement
-                        </button>
-                    </>
+            {/* --- ACTION BUTTONS --- */}
+            <div className="flex gap-3 mt-8 border-t pt-6">
+                {canCancel && (
+                    <button onClick={() => setCancelModalOpen(true)} className="px-4 py-2 border rounded text-red-600 hover:bg-red-50 font-medium">
+                        Cancel Order
+                    </button>
                 )}
+                {canReturn && (
+                    <button onClick={() => setReturnModalOpen(true)} className="px-4 py-2 border rounded text-gray-700 hover:bg-gray-100 font-medium">
+                        Request Return or Replacement
+                    </button>
+                )}
+                <Link href="/shop" className="px-4 py-2 bg-[#B88E2F] text-white rounded font-medium">
+                    Buy Again
+                </Link>
             </div>
 
-            {/* REORDER MODAL */}
-            {selectedItem && (
-                <ReorderModal
-                    open={showReorderModal}
-                    onClose={() => setShowReorderModal(false)}
-                    item={selectedItem}
-                />
-            )}
-        </section>
+            {/* --- MODALS (Rendered but hidden until opened) --- */}
+            <CancelOrderModal
+                isOpen={isCancelModalOpen}
+                onClose={() => setCancelModalOpen(false)}
+                onConfirm={handleConfirmCancel}
+                orderId={localOrder.orderId}
+            />
+            <ReturnRequestModal
+                isOpen={isReturnModalOpen}
+                onClose={() => setReturnModalOpen(false)}
+                onSubmit={handleConfirmReturn}
+                orderId={localOrder.orderId}
+            />
+        </div>
     );
 }

@@ -34,7 +34,7 @@ export default function RootLayout({
         <Navbar />
         {/* Page Content */}
 
-        <div className="relative z-10">{children}</div>
+        <div className="relative z-10 pt-18">{children}</div>
         <CartDrawer />
         <WishlistDrawer />
         <Footer />

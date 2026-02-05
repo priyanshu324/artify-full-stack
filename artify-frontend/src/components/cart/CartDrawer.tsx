@@ -1,20 +1,24 @@
 "use client";
 
-import React from "react";
 import Image from "next/image";
 import { FiX, FiTrash2 } from "react-icons/fi";
-import { useCartStore } from "@/src/store/cartStore";
-import { useUIStore } from "@/src/store/uiStore";
+import { useZDispatch, useZSelector } from "@/src/store/redux/hooks";
+import {
+    removeFromCart,
+    increaseQty,
+    decreaseQty,
+    clearCart,
+} from "@/src/store/redux/zCart/zCartSlice";
+import { useZUiStore } from "@/src/store/zUiStore";
 
 export default function CartDrawer() {
-    const { isCartOpen, closeCart } = useUIStore();
-    const items = useCartStore((s) => s.items);
-    const increaseQty = useCartStore((s) => s.increaseQty);
-    const decreaseQty = useCartStore((s) => s.decreaseQty);
-    const removeFromCart = useCartStore((s) => s.removeFromCart);
+    const dispatch = useZDispatch();
+    const items = useZSelector((s) => s.zCart.items);
 
-    const totalPrice = items.reduce(
-        (sum, item) => sum + item.price * item.quantity,
+    const { isCartOpen, closeCart } = useZUiStore();
+
+    const subtotal = items.reduce(
+        (acc, item) => acc + item.price * item.quantity,
         0
     );
 
@@ -22,121 +26,92 @@ export default function CartDrawer() {
 
     return (
         <>
-            {/* BACKDROP */}
             <div
                 onClick={closeCart}
-                className="fixed inset-0 bg-black/40 z-50 cursor-pointer"
+                className="fixed inset-0 bg-black/40 z-60"
             />
 
-            {/* DRAWER */}
-            <aside
-                role="dialog"
-                aria-modal
-                className="fixed right-0 top-0 h-full w-full sm:w-[420px] bg-white z-50 shadow-2xl animate-slideIn"
-            >
-                {/* HEADER */}
-                <div className="flex items-center justify-between p-4 border-b">
-                    <h3 className="text-lg font-semibold">Your Cart</h3>
-                    <button
-                        onClick={closeCart}
-                        aria-label="Close cart"
-                        className="p-2 rounded-md hover:bg-gray-100 cursor-pointer"
-                    >
+            <aside className="fixed right-0 top-0 h-full w-full sm:w-[420px] bg-white z-70 shadow-xl">
+                {/* Header */}
+                <div className="flex justify-between items-center p-4 border-b">
+                    <h3 className="font-semibold text-lg">My Cart</h3>
+                    <button onClick={closeCart}>
                         <FiX />
                     </button>
                 </div>
 
-                {/* CART ITEMS */}
-                <div className="p-4 overflow-y-auto h-[calc(100%-200px)]">
+                {/* Items */}
+                <div className="p-4 space-y-4 overflow-y-auto h-[calc(100%-200px)]">
                     {items.length === 0 ? (
-                        <p className="text-center text-gray-500 mt-8">
+                        <p className="text-center text-gray-500">
                             Your cart is empty 🛒
                         </p>
                     ) : (
-                        <ul className="space-y-4">
-                            {items.map((item) => (
-                                <li
+                            items.map((item) => (
+                                <div
                                     key={item.id}
-                                    className="flex items-center gap-4 p-3 rounded-md border hover:shadow-sm transition-all"
-                                >
-                                    <Image
-                                        src={item.img}
-                                        alt={item.name}
-                                        width={80}
-                                        height={80}
-                                        className="rounded-md object-cover"
-                                    />
+                                  className="flex gap-4 border rounded p-3"
+                              >
+                                  <Image
+                                      src={item.img}
+                                      alt={item.name}
+                                      width={80}
+                                      height={80}
+                                      className="rounded object-cover"
+                                  />
 
-                                    <div className="flex-1">
-                                        <h4 className="font-semibold">{item.name}</h4>
-                                        <p className="text-gray-600 text-sm">
-                                            Rs. {item.price.toLocaleString("en-IN")}
-                                        </p>
+                                  <div className="flex-1">
+                                      <h4 className="font-medium">{item.name}</h4>
+                                      <p className="text-sm text-gray-500">
+                                          Rs. {item.price.toLocaleString("en-IN")}
+                                      </p>
 
-                                        {/* Quantity Control */}
-                                        <div className="flex items-center gap-3 mt-2">
-                                            <button
-                                                onClick={() => decreaseQty(item.id)}
-                                                className="w-7 h-7 flex items-center justify-center border rounded hover:bg-gray-100 cursor-pointer"
-                                            >
-                                                -
-                                            </button>
-                                            <span>{item.quantity}</span>
-                                            <button
-                                                onClick={() => increaseQty(item.id)}
-                                                className="w-7 h-7 flex items-center justify-center border rounded hover:bg-gray-100 cursor-pointer"
-                                            >
-                                                +
-                                            </button>
-                                        </div>
-                                    </div>
+                                      <div className="flex items-center gap-2 mt-2">
+                                          <button
+                                              onClick={() => dispatch(decreaseQty(item.id))}
+                                              className="border px-2"
+                                          >
+                                              −
+                                          </button>
+                                          <span>{item.quantity}</span>
+                                          <button
+                                              onClick={() => dispatch(increaseQty(item.id))}
+                                              className="border px-2"
+                                          >
+                                              +
+                                          </button>
+                                      </div>
+                                  </div>
 
-                                    <button
-                                        onClick={() => removeFromCart(item.id)}
-                                        aria-label="Remove item"
-                                        className="p-2 text-red-600 hover:bg-red-50 rounded-md cursor-pointer"
-                                    >
-                                        <FiTrash2 />
-                                    </button>
-                                </li>
-                            ))}
-                        </ul>
+                                  <button
+                                      onClick={() => dispatch(removeFromCart(item.id))}
+                                      className="text-red-500"
+                                  >
+                                      <FiTrash2 />
+                                  </button>
+                              </div>
+                          ))
                     )}
                 </div>
 
-                {/* FOOTER */}
+                {/* Footer */}
                 <div className="p-4 border-t">
-                    <div className="flex items-center justify-between mb-4">
-                        <span className="text-sm text-gray-600">Subtotal</span>
-                        <span className="font-semibold">
-                            Rs. {totalPrice.toLocaleString("en-IN")}
-                        </span>
+                    <div className="flex justify-between mb-4">
+                        <span>Subtotal</span>
+                        <strong>Rs. {subtotal.toLocaleString("en-IN")}</strong>
                     </div>
 
+                    <button className="w-full bg-[#B88E2F] text-white py-2 rounded">
+                        Checkout
+                    </button>
+
                     <button
-                        onClick={() => {
-                            closeCart();
-                            window.location.href = "/checkout";
-                        }}
-                        className="w-full bg-[#B88E2F] text-white py-3 rounded-md font-semibold hover:bg-[#9a7223] cursor-pointer"
+                        onClick={() => dispatch(clearCart())}
+                        className="w-full mt-3 text-sm text-red-600 underline"
                     >
-                        Proceed to Checkout
+                        Clear Cart
                     </button>
                 </div>
-
-                <style jsx>{`
-                    .animate-slideIn {
-                        animation: slideIn 240ms ease forwards;
-                    }
-                    @keyframes slideIn {
-                        from {
-                            transform: translateX(100%);
-                        }
-                        to {
-                            transform: translateX(0%);
-                        }
-                    }
-                `}</style>
             </aside>
         </>
     );
