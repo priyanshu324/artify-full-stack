@@ -1,79 +1,122 @@
 "use client";
 
 import React, { useState } from "react";
+import Image from "next/image";
+import { ChevronRightIcon } from "@heroicons/react/24/solid";
+import { IconType } from "react-icons";
+// We don't need the react-icons for cards if we are using images
+// import { FaCcVisa, FaCcMastercard, FaCcAmex, FaCcPaypal } from "react-icons/fa";
 
-export type PaymentShape = {
-    method: "cod" | "upi" | "card" | "netbanking";
-    details?: Record<string, string>;
-};
+// Define the type for the payment method
+export type PaymentMethod = "visa" | "mastercard" | "paypal" | "cod";
 
-export default function CheckoutPayment({
-    onPrev,
-    onNext,
-}: {
-    onPrev: () => void;
-    onNext: (p: PaymentShape) => void;
-}) {
-    const [method, setMethod] = useState<PaymentShape["method"] | "">("");
-    const [card, setCard] = useState({ number: "", name: "", expiry: "", cvv: "" });
+// --- Create a data structure for our payment options ---
+const paymentOptions: { id: PaymentMethod; name: string; image: string }[] = [
+    { id: "visa", name: "Credit/Debit Card (Visa)", image: "/visa.svg" },
+    { id: "mastercard", name: "Credit/Debit Card (MasterCard)", image: "/master.svg" },
+    { id: "cod", name: "Cash On Delivery", image: "/visa.svg" }, // Assuming you have a cod.svg
+    { id: "paypal", name: "PayPal", image: "/Paypal.svg" },
+];
+
+interface CheckoutPaymentProps {
+    selectedMethod: PaymentMethod;
+    onMethodChange: (method: PaymentMethod) => void;
+}
+
+export default function CheckoutPayment({ selectedMethod, onMethodChange }: CheckoutPaymentProps) {
+    // --- STATE FOR THE CARD DETAILS FORM ---
+    // In a real app, this state would be managed by the secure payment gateway component.
+    const [cardDetails, setCardDetails] = useState({
+        number: "",
+        name: "",
+        expiry: "",
+        cvv: "",
+    });
+    const [saveCard, setSaveCard] = useState(true);
+
+    // --- DERIVED STATE: Check if a card method is selected to show the form ---
+    const isCardMethodSelected = selectedMethod === 'visa' || selectedMethod === 'mastercard';
 
     return (
-        <div>
-            <h2 className="text-xl font-semibold mb-4">Payment</h2>
+        <div className="mt-6">
+            <div className="border rounded-lg overflow-hidden">
+                <ul className="divide-y divide-gray-200">
+                    {/* Map over the payment options to create the list */}
+                    {paymentOptions.map((option) => {
+                        const isSelected = selectedMethod === option.id;
 
-            <div className="space-y-3">
-                <label className="flex items-center gap-3 border p-3 rounded cursor-pointer">
-                    <input type="radio" name="pay" value="cod" onChange={() => setMethod("cod")} />
-                    Cash on delivery
-                </label>
+                        return (
+                            <li
+                                key={option.id}
+                                onClick={() => onMethodChange(option.id)}
+                                className={`flex items-center justify-between p-4 cursor-pointer transition-colors ${isSelected ? "bg-[#f9f1e7]" : "hover:bg-gray-50"
+                                    }`}
+                            >
+                                <div className="flex items-center gap-4">
+                                    <Image src={option.image} alt={option.name} width={40} height={25} />
+                                    <span className="text-lg font-medium text-gray-800">{option.name}</span>
+                                </div>
+                                {!isSelected && <ChevronRightIcon className="w-6 h-6 text-gray-400" />}
+                            </li>
+                        );
+                    })}
+                </ul>
+            </div>
 
-                <label className="flex items-center gap-3 border p-3 rounded cursor-pointer">
-                    <input type="radio" name="pay" value="upi" onChange={() => setMethod("upi")} />
-                    UPI (Pay using UPI apps)
-                </label>
-
-                <label className="flex items-center gap-3 border p-3 rounded cursor-pointer">
-                    <input type="radio" name="pay" value="card" onChange={() => setMethod("card")} />
-                    Credit / Debit card
-                </label>
-
-                {method === "card" && (
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-3">
-                        <input value={card.number} onChange={(e) => setCard((s) => ({ ...s, number: e.target.value }))} placeholder="Card number" className="border p-2 rounded" />
-                        <input value={card.name} onChange={(e) => setCard((s) => ({ ...s, name: e.target.value }))} placeholder="Name on card" className="border p-2 rounded" />
-                        <input value={card.expiry} onChange={(e) => setCard((s) => ({ ...s, expiry: e.target.value }))} placeholder="MM/YY" className="border p-2 rounded" />
-                        <input value={card.cvv} onChange={(e) => setCard((s) => ({ ...s, cvv: e.target.value }))} placeholder="CVV" className="border p-2 rounded" />
+            {/* --- CONDITIONALLY RENDERED CARD DETAILS FORM --- */}
+            {isCardMethodSelected && (
+                <div className="mt-6 p-6 border rounded-lg bg-white transition-all duration-300">
+                    <h3 className="text-lg font-semibold mb-4">Enter Card Details</h3>
+                    <div className="space-y-4">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            {/* Card Number */}
+                            <input
+                                type="text"
+                                placeholder="Card Number"
+                                className="border p-3 rounded-md w-full sm:col-span-2"
+                            // value={cardDetails.number} - In a real app, this would be controlled by the payment provider
+                            />
+                            {/* Cardholder Name */}
+                            <input
+                                type="text"
+                                placeholder="Name on Card"
+                                className="border p-3 rounded-md w-full sm:col-span-2"
+                            // value={cardDetails.name}
+                            />
+                            {/* Expiry Date */}
+                            <input
+                                type="text"
+                                placeholder="MM/YY"
+                                className="border p-3 rounded-md w-full"
+                            // value={cardDetails.expiry}
+                            />
+                            {/* CVV */}
+                            <input
+                                type="text"
+                                placeholder="CVV"
+                                className="border p-3 rounded-md w-full"
+                            // value={cardDetails.cvv}
+                            />
+                        </div>
+                        {/* Save Card Checkbox */}
+                        <div className="flex items-center gap-3 pt-2">
+                            <input
+                                type="checkbox"
+                                id="saveCard"
+                                checked={saveCard}
+                                onChange={(e) => setSaveCard(e.target.checked)}
+                                className="h-5 w-5 rounded text-[#B88E2F] focus:ring-[#B88E2F]"
+                            />
+                            <label htmlFor="saveCard" className="text-sm text-gray-700">
+                                Save this card for future payments
+                            </label>
+                        </div>
+                        <p className="text-xs text-gray-500 pt-2">
+                            🔒 Your card details are securely processed by our payment partner and are not stored on our servers.
+                        </p>
                     </div>
-                )}
-
-                <label className="flex items-center gap-3 border p-3 rounded cursor-pointer">
-                    <input type="radio" name="pay" value="netbanking" onChange={() => setMethod("netbanking")} />
-                    Net banking
-                </label>
-            </div>
-
-            <div className="flex justify-between mt-8">
-                <button onClick={onPrev} className="px-6 py-2 border rounded">Back</button>
-
-                <button
-                    onClick={() => {
-                        if (!method) return alert("Please pick a payment method");
-                        const payload: PaymentShape = {
-                            method: method as PaymentShape["method"],
-                            details: method === "card" ? card : undefined,
-                        };
-                        onNext(payload);
-                    }}
-                    className="px-6 py-2 bg-[#B88E2F] text-white rounded"
-                >
-                    Continue
-                </button>
-            </div>
-
-            <p className="text-xs text-gray-500 mt-3">
-                Note: This page contains placeholders for payment UI. For production you need
-                server-side payment order creation (Razorpay/Stripe) and secure keys.
-            </p>
+                </div>
+            )}
         </div>
     );
 }

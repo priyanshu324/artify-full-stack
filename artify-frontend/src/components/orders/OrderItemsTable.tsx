@@ -19,11 +19,11 @@ export default function OrderItemsTable({ order }: { order: Order }) {
 
                         <div className="flex-1">
                             <div className="font-medium">{it.name}</div>
-                            <div className="text-sm text-gray-500">Qty: {it.qty}</div>
+                            <div className="text-sm text-gray-500">Qty: {it.quantity}</div>
                         </div>
 
                         <div className="text-right">
-                            <div className="font-semibold">Rs. {(it.price * it.qty).toLocaleString("en-IN")}</div>
+                            <div className="font-semibold">Rs. {(it.price * it.quantity).toLocaleString("en-IN")}</div>
                             <div className="text-sm text-gray-500">Rs. {it.price.toLocaleString("en-IN")} each</div>
                         </div>
                     </div>

@@ -1,7 +1,8 @@
 // src/types/order.ts
 
 export interface OrderItem {
-  id: number; // used everywhere in UI
+  id: number;
+  slug: string;
   name: string;
   img: string;
   price: number;
@@ -11,10 +12,9 @@ export interface OrderItem {
 export interface TrackingStep {
   id: number;
   title: string;
-  status: string;
+  subtitle?: string;
   date: string;
   completed: boolean;
-  note: string;
 }
 
 export interface ReturnRequest {
@@ -38,7 +38,6 @@ export interface Order {
   orderId: string;
   placedAt: string;
   deliveredAt?: string;
-
   status: OrderStatus;
 
   shippingAddress: string;
@@ -48,7 +47,7 @@ export interface Order {
 
   subtotal: number;
   shippingFee: number;
-  discount?: number; // UI reads it => must exist
+  discount?: number;
   totalAmount: number;
 
   paymentMethod?: string;

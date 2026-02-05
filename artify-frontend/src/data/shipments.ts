@@ -2,7 +2,7 @@ export const shipments = [
   {
     trackingId: "TRK-1001",
     carrier: "Delhivery",
-    trackingUrl: "https://example.com/delhivery/TRK-1001",
+            trackingUrl: "http://localhost:3000/delhivery/TRK-1001",
     eta: "2025-11-26",
     steps: [
       { status: "Manifested", date: "2025-11-21", completed: true },

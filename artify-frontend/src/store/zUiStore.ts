@@ -1,16 +1,15 @@
-// src/store/uiStore.ts
-import {create} from "zustand";
+import { create } from "zustand";
 
-type UIState = {
+interface ZUiState {
   isCartOpen: boolean;
   isWishlistOpen: boolean;
   openCart: () => void;
   closeCart: () => void;
   openWishlist: () => void;
   closeWishlist: () => void;
-};
+}
 
-export const useUIStore = create<UIState>((set) => ({
+export const useZUiStore = create<ZUiState>((set) => ({
   isCartOpen: false,
   isWishlistOpen: false,
   openCart: () => set({ isCartOpen: true }),

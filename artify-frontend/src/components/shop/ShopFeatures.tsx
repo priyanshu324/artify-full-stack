@@ -29,7 +29,7 @@ const features = [
 
 const ShopFeatures: React.FC = () => {
     return (
-        <section className="bg-[#F9F1E7] py-10">
+        <section className="bg-[#F9F1E7] py-10 mt-10">
             <div className="max-w-7xl mx-auto px-4 flex flex-wrap justify-between items-center gap-8 text-center sm:text-left">
                 {features.map((item, index) => (
                     <div
